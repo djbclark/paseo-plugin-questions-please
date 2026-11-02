@@ -10,6 +10,7 @@ export type WaitingBucket = "needs_input";
 /** The subset of a Paseo agent snapshot the queue reads. */
 export interface QueueAgent {
   id: string;
+  title?: string | null;
   workspaceId?: string | null;
   archivedAt?: string | null;
   attentionReason?: "finished" | "error" | "permission" | null;

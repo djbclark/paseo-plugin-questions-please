@@ -1,6 +1,6 @@
 # paseo-plugin-questions-please
 
-A [Paseo](https://paseo.sh) plugin that jumps to the next agent waiting for your input.
+A [Paseo](https://paseo.sh) plugin that shows what is waiting for you on a **Decisions** screen (relay ledger questions you can answer, plus agents on a card) and jumps to the next agent waiting for your input.
 See [OVERVIEW.md](OVERVIEW.md) for what it does and its limits.
 
 ## Installation
@@ -21,8 +21,14 @@ To update an existing installation after the registry approves a release:
 paseo plugin update questions-please
 ```
 
-The sidebar shows an amber waiting count and hollow circle, with your current shortcut to their
-left on desktop and web. These hide when no agents are waiting.
+## Decisions and the relay ledger
+
+The Decisions screen needs djbclark-ade's relay question ledger. On the daemon it reads `~/.local/state/relay/asks/q-*.json` (a sibling of `RELAY_DEFER_DIR` when that is set; files that do not parse or have `v` other than 1 are skipped) and answers by running `python3 -I ~/src/djbclark-ade/skills/session-finder/relay.py --answer q-ID N [--note TEXT] --nonce <record key> --operator-token-file ~/.local/state/relay/operator.token --via-label decisions-screen --json` as an argv list, with `PASEO_AGENT_ID` removed from the environment. Exit codes 0 (delivered), 1 (recorded, queued or refused), 2 (bad input), 10 (already answered) and 11 (withdrawn or expired) are shown on the card. If relay lacks `--answer`, the cards are read-only and say "relay ledger not installed yet". The plugin never writes to the relay state directory; the app never sees the asks directory, the record key or the token path.
+
+The sidebar shows an amber waiting count and hollow circle (waiting agents plus open ledger
+questions), with your current shortcut to their left on desktop and web. These hide when nothing is
+waiting. The row opens the Decisions screen; the shortcut and the "Next waiting question" Command
+Center item still jump to the next agent.
 
 ## Limitations
 
@@ -48,7 +54,11 @@ paseo plugin logs questions-please
 | ------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `shared/queue.ts`         | Which agents are in the queue and the cycle order. Add a bucket here to cycle through more than `needs_input`. |
 | `shared/shortcut.ts`      | The key combination: what can be bound, matching, parsing a stored value, display text.                        |
-| `client/jump.tsx`         | The one screen every entry point opens. Navigation is only handed to screens.                                  |
+| `client/jump.tsx`         | The screen the shortcut and Command Center item open. Navigation is only handed to screens.                    |
+| `client/decisions.tsx`    | The Decisions screen: ledger cards, agents on a card, answered today.                                           |
+| `shared/ledger.ts`        | Parses a ledger record into display data, groups it, maps relay's `--answer` exit codes.                        |
+| `shared/decisions.ts`     | The two RPC contracts between the screen and the daemon.                                                       |
+| `server/ledger.ts`        | Daemon only: reads the asks directory, runs `relay.py --answer`. The only code that touches either.            |
 | `client/web.ts`           | The `keydown` listener, the combo recorder and the `localStorage` binding. Plugins have no keybinding API.     |
 | `client/sidebar-item.tsx` | Sidebar row with a live waiting count.                                                                         |
 | `client/settings.tsx`     | Settings screen to record or reset the shortcut.                                                               |

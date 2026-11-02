@@ -1,7 +1,7 @@
 {
   "id": "questions-please",
   "name": "Questions please",
-  "description": "Jump to the next agent waiting for your input, from a keyboard shortcut, the Command Center or the sidebar.",
+  "description": "Answer relay ledger questions and jump to agents waiting for your input, from a Decisions screen, a keyboard shortcut, the Command Center or the sidebar.",
   "media": ["assets/settings.png", "assets/sidebar-row.png"],
   "requirements": {
     "paseo": ">=0.14.0"
