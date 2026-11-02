@@ -1,10 +1,10 @@
 # paseo-plugin-questions-please
 
-Paseo client-only plugin (no server entry). Cycles through agents in the `needs_input` bucket.
+Paseo plugin with a client entry and a server entry. Cycles through agents in the `needs_input` bucket and has a Decisions screen for relay ledger questions (needs djbclark-ade's `relay.py --answer`).
 
-- `npm run typecheck` and `npm test` before every commit. Tests run from `shared/*.test.ts`. `client-presentation.test.ts` evaluates the real client modules with explicit host adapters to check presentation and storage subscriptions; it does not run a browser, React renderer, or queue subscription. Runtime `shared/` code has no DOM, React or Node imports.
+- `npm run typecheck` and `npm test` before every commit. Tests run from `shared/*.test.ts` and `server/*.test.ts`. `client-presentation.test.ts` evaluates the real client modules with explicit host adapters to check presentation and storage subscriptions; it does not run a browser, React renderer, or queue subscription. Runtime `shared/` code has no DOM, React or Node imports. Only `server/ledger.ts` touches the asks directory, the operator token path and relay; the record key and token path must never appear in `client/` or `shared/` (a test greps for it). Imports of `shared/` from `server/` use the `.ts` extension so `node --test` resolves them.
 - DOM globals live only in `client/web.ts`, declared locally. The tsconfig has no DOM lib.
-- The shortcut binding is per device in `localStorage` (key `paseo-plugin-questions-please.combo`), read on every keydown that holds Cmd, Ctrl or Alt. It is not a Paseo host setting: those need a server entry and are shared by every client of the daemon.
+- The Decisions sidebar row and Command Center item need the ledger RPC; a host without it counts agents only. The shortcut binding is per device in `localStorage` (key `paseo-plugin-questions-please.combo`), read on every keydown that holds Cmd, Ctrl or Alt. It is not a Paseo host setting: those need a server entry and are shared by every client of the daemon.
 - Paseo's own capture-phase `keydown` handlers on `window` run before the plugin's. The plugin cannot stop them, so Escape while recording also leaves the settings page.
 - Adding a bucket: extend `WaitingBucket` in `shared/queue.ts`, add its matcher, list it in `ENABLED_BUCKETS`.
 - `MATCHERS.needs_input` restates `deriveAgentStateBucket` from `@getpaseo/protocol`, which plugins cannot import. Re-check it when Paseo changes that rule.

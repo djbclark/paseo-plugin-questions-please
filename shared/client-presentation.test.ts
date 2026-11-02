@@ -91,7 +91,7 @@ function device(platform = "web", mac = true) {
   };
 }
 
-function render(api: Web, count: number | null, surface0 = "#181b19") {
+function render(api: Web, count: number | null, surface0 = "#181b19", ledger?: number) {
   const jsx = (type: string, props: Element["props"]): Element => ({ type, props });
   const { NextQuestionItem } = load<{ NextQuestionItem(props: unknown): Element }>(
     "client/sidebar-item.tsx",
@@ -109,7 +109,12 @@ function render(api: Web, count: number | null, surface0 = "#181b19") {
       "./web": api,
       "../shared/queue": {},
       "./directory": {},
-      "./jump": { JUMP_SCREEN_ID: "jump" },
+      "./decisions": {
+        DECISIONS_SCREEN_ID: "decisions",
+        useLedger: () => ({
+          data: ledger === undefined ? undefined : { waiting: new Array(ledger).fill({}) },
+        }),
+      },
     },
   );
   let opened: { screenId: string } | undefined;
@@ -118,7 +123,8 @@ function render(api: Web, count: number | null, surface0 = "#181b19") {
     openScreen: (target: { screenId: string }) => {
       opened = target;
     },
-    currentScreen: { screenId: "jump" },
+    host: { id: "host" },
+    currentScreen: { screenId: "decisions" },
   });
   // SidebarRow is the host boundary: inspect its supplied trailing contribution.
   const trailing = (row.props as Element["props"] & { trailing: Element }).trailing;
@@ -147,7 +153,7 @@ describe("sidebar presentation", () => {
         assert.equal(row.props.label, "Questions please");
         assert.equal(row.props.active, true);
         row.props.onPress?.();
-        assert.equal(opened()?.screenId, "jump");
+        assert.equal(opened()?.screenId, "decisions");
         if (!count) {
           assert.equal(key, null);
           assert.equal(status, null);
@@ -195,6 +201,21 @@ describe("sidebar presentation", () => {
       assert.ok(status);
     });
   }
+});
+
+describe("sidebar count with ledger questions", () => {
+  const label = (ledger: number | undefined, agents: number | null) => {
+    const { parts } = render(device().api, agents, "#181b19", ledger);
+    return parts[1] ? children(parts[1])[1]?.props.children : null;
+  };
+  it("adds open ledger questions to waiting agents", () => {
+    assert.equal(label(2, 3), 5);
+    assert.equal(label(2, 0), 2);
+  });
+  it("counts agents alone when the ledger is unavailable and waits for the agent count", () => {
+    assert.equal(label(undefined, 3), 3);
+    assert.equal(label(4, null), null);
+  });
 });
 
 describe("shortcut storage observation", () => {

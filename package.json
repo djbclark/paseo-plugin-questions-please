@@ -1,7 +1,7 @@
 {
   "name": "paseo-plugin-questions-please",
   "version": "0.1.3",
-  "description": "Paseo plugin: jump to the next agent waiting for your input, from a keyboard shortcut, the Command Center or the sidebar",
+  "description": "Paseo plugin: answer ledger questions and jump to agents waiting for your input, from a Decisions screen, a keyboard shortcut, the Command Center or the sidebar",
   "keywords": [
     "agents",
     "paseo",
@@ -24,14 +24,16 @@
     "index.server.ts",
     "index.server.tsx",
     "client/",
+    "server/",
     "shared/",
     "assets/",
-    "!shared/*.test.ts"
+    "!shared/*.test.ts",
+    "!server/*.test.ts"
   ],
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test shared/*.test.ts"
+    "test": "node --test shared/*.test.ts server/*.test.ts"
   },
   "devDependencies": {
     "@getpaseo/plugin": "0.14.0",

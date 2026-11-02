@@ -7,11 +7,12 @@ import { formatCombo } from "../shared/shortcut";
 import { isMac, readCombo, shortcutsSupported, subscribeCombo } from "./web";
 import { waitingQueue } from "../shared/queue";
 import { readAllAgents } from "./directory";
-import { JUMP_SCREEN_ID } from "./jump";
+import { DECISIONS_SCREEN_ID, useLedger } from "./decisions";
 
 const COUNT_KEY = ["questions-please", "count"] as const;
 const REFRESH_DEBOUNCE_MS = 400;
 const BACKSTOP_MS = 30_000;
+const LEDGER_POLL_MS = 15_000;
 
 /** How many agents are waiting. Daemon updates trigger a re-read; a slow poll backs them up. */
 function useWaitingCount(): number | null {
@@ -68,8 +69,11 @@ function shortcutLabel(): string {
   return shortcutsSupported ? formatCombo(readCombo(), isMac) : "";
 }
 
-export function NextQuestionItem({ currentScreen, openScreen, theme }: PluginSidebarItemProps) {
-  const count = useWaitingCount();
+export function NextQuestionItem({ currentScreen, openScreen, theme, host }: PluginSidebarItemProps) {
+  const agentCount = useWaitingCount();
+  // Open ledger questions add to the waiting agents. A host without the ledger RPC counts none.
+  const ledger = useLedger(host.id, LEDGER_POLL_MS);
+  const count = agentCount === null ? null : agentCount + (ledger.data?.waiting.length ?? 0);
   const shortcut = useSyncExternalStore(subscribeCombo, shortcutLabel, () => "");
   // Match Better Paseo Tasks' status palette, which is brighter than statusWarning.
   const rgb = theme.colors.surface0.match(/^#([0-9a-f]{6})/i)?.[1];
@@ -94,7 +98,7 @@ export function NextQuestionItem({ currentScreen, openScreen, theme }: PluginSid
           {count !== null && count > 0 ? (
             <View
               accessible
-              accessibilityLabel={`${count} waiting for input`}
+              accessibilityLabel={`${count} waiting for you`}
               style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
             >
               <View
@@ -124,8 +128,8 @@ export function NextQuestionItem({ currentScreen, openScreen, theme }: PluginSid
           ) : null}
         </View>
       }
-      active={currentScreen?.screenId === JUMP_SCREEN_ID}
-      onPress={() => openScreen({ screenId: JUMP_SCREEN_ID, params: { n: String(Date.now()) } })}
+      active={currentScreen?.screenId === DECISIONS_SCREEN_ID}
+      onPress={() => openScreen({ screenId: DECISIONS_SCREEN_ID })}
     />
   );
 }
